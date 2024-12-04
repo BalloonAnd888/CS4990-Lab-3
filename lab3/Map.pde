@@ -48,7 +48,7 @@ class Cell {
     walls = new ArrayList<Wall>();
   }
 
-  void addNeighbors(Cell neighbor) {
+  void addNeighbor(Cell neighbor) {
     neighbors.add(neighbor);
   }
 
@@ -84,6 +84,8 @@ class Map
   void generate(int which)
   {
     walls.clear();
+    
+    System.out.println("Generate");
 
     System.out.println("Width: " + width);
     System.out.println("Height: " + height);
@@ -104,6 +106,34 @@ class Map
       grid.add(row);
     }
 
+    // Add neighbors
+    for (int x = 0; x < rows; x++) {
+      for (int y = 0; y < cols; y++) {
+        Cell current = grid.get(x).get(y);
+
+        // Left
+        if (y > 0) {
+          current.addNeighbor(grid.get(x).get(y-1));
+        }
+
+        // Right
+        if (y < cols - 1) {
+          current.addNeighbor(grid.get(x).get(y+1));
+        }
+
+        // Top
+        if (x > 0) {
+          current.addNeighbor(grid.get(x-1).get(y));
+        }
+
+        // Bottom
+        if (x < rows - 1) {
+          current.addNeighbor(grid.get(x+1).get(y));
+        }
+      }
+    }
+
+    printCellNeighbor();
     printGridLayout(cols, rows);
 
     // Create cell walls
@@ -147,6 +177,39 @@ class Map
 
     printGrid();
     printCellWalls();
+
+    //Place all walls
+    //  Start at a (random, or selected) node and mark it as visited
+    //  Add the walls around it to a list
+    //While there are walls in the list, pick a random wall:
+    //If only one of the two cells it connects has been visited,
+    //  remove the wall from the map, mark that neighbor as
+    //  visited and add its walls to the list
+    //  Remove the wall from the list
+
+    // Get random start index
+    Cell startCell = grid.get(int(random(rows))).get(int(random(cols)));
+    System.out.println(startCell.x + " " + startCell.y);
+    
+    
+    
+    
+    
+    
+    
+  }
+
+  void printCellNeighbor() {
+    System.out.println("Print Cell Neighbors: ");
+    for (int x = 0; x < grid.size(); x++) {
+      for (int y = 0; y < grid.get(x).size(); y++) {
+        Cell cell = grid.get(x).get(y);
+        System.out.println("Cell (" + cell.x + ", " + cell.y + ") neighbors:");
+        for (Cell c : cell.neighbors) {
+          System.out.println("Cell (" + c.x + ", " + c.y + ")");
+        }
+      }
+    }
   }
 
   void printGridLayout(int cols, int rows) {
@@ -182,6 +245,8 @@ class Map
       }
     }
   }
+
+
 
   void update(float dt)
   {
