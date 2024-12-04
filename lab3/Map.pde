@@ -63,7 +63,6 @@ class Cell {
   void draw() {
     stroke(255);
     strokeWeight(3);
-    fill(255, 0, 0);
   }
 }
 
@@ -97,61 +96,88 @@ class Map
 
     grid = new ArrayList<ArrayList<Cell>>();
 
-    for (int x = 0; x < cols; x++) {
+    for (int x = 0; x < rows; x++) {
       ArrayList<Cell> row = new ArrayList<Cell>();
-      for (int y = 0; y < rows; y++) {
+      for (int y = 0; y < cols; y++) {
         row.add(new Cell(x, y));
       }
       grid.add(row);
     }
 
+    printGridLayout(cols, rows);
+
+    // Create cell walls
+    for (int x = 0; x < rows; x++) {
+      for (int y = 0; y < cols; y++) {
+        Cell current = grid.get(x).get(y);
+
+        // Top Wall
+        PVector topStart = new PVector(y*GRID_SIZE, x*GRID_SIZE);
+        PVector topEnd = new PVector((y+1)*GRID_SIZE, x*GRID_SIZE);
+        Wall topWall = new Wall(topStart, topEnd);
+        current.walls.add(topWall);
+        walls.add(topWall);
+
+        // Bottom Wall
+        PVector bottomStart = new PVector(y*GRID_SIZE, (x+1)*GRID_SIZE);
+        PVector bottomEnd = new PVector((y+1)*GRID_SIZE, (x+1)*GRID_SIZE);
+        Wall bottomWall = new Wall(bottomStart, bottomEnd);
+        current.walls.add(bottomWall);
+        if (x == rows-1) {
+          walls.add(bottomWall);
+        }
+
+        // Left Wall
+        PVector leftStart = new PVector(y*GRID_SIZE, x*GRID_SIZE);
+        PVector leftEnd = new PVector(y*GRID_SIZE, (x+1)*GRID_SIZE);
+        Wall leftWall = new Wall(leftStart, leftEnd);
+        current.walls.add(leftWall);
+        walls.add(leftWall);
+
+        // Right Wall
+        PVector rightStart = new PVector((y+1)*GRID_SIZE, x*GRID_SIZE);
+        PVector rightEnd = new PVector((y+1)*GRID_SIZE, (x+1)*GRID_SIZE);
+        Wall rightWall = new Wall(rightStart, rightEnd);
+        current.walls.add(rightWall);
+        if (y == cols-1) {
+          walls.add(rightWall);
+        }
+      }
+    }
+
+    printGrid();
+    printCellWalls();
+  }
+
+  void printGridLayout(int cols, int rows) {
     System.out.println("Grid Layout: ");
-    for (int x = 0; x < cols; x++) {
+    for (int x = 0; x < rows; x++) {
       StringBuilder rowString = new StringBuilder();
-      for (int y = 0; y < rows; y++) {
-        rowString.append("(" + x + "," + y + ") "); 
+      for (int y = 0; y < cols; y++) {
+        rowString.append("(" + x + "," + y + ") ");
       }
       System.out.println(rowString.toString());
     }
+  }
 
-    for (int x = 0; x < cols; x++) {
-      for (int y = 0; y < rows; y++) {
-        Cell current = grid.get(x).get(y);
+  void printGrid() {
+    // Print all walls in the grid (no duplicates)
+    System.out.println("Print Grid: ");
+    for (Wall w : walls) {
+      System.out.println("Wall from " + w.start + " to " + w.end);
+    }
+    System.out.println(walls.size());
+  }
 
-        // Add right wall if not on the rightmost edge
-        if (x < cols - 1) {
-          PVector start = new PVector(x * GRID_SIZE, y * GRID_SIZE);
-          PVector end = new PVector((x + 1) * GRID_SIZE, y * GRID_SIZE);
-          Wall rightWall = new Wall(start, end);
-          walls.add(rightWall);
-          current.walls.add(rightWall); 
-        }
-
-        // Add bottom wall if not on the bottommost edge
-        if (y < rows - 1) {
-          PVector start = new PVector(x * GRID_SIZE, y * GRID_SIZE);
-          PVector end = new PVector(x * GRID_SIZE, (y + 1) * GRID_SIZE);
-          Wall bottomWall = new Wall(start, end);
-          walls.add(bottomWall);
-          current.walls.add(bottomWall);  // Add wall to current cell
-        }
-
-        // Add top wall if not on the topmost edge
-        if (y > 0) {
-          PVector start = new PVector(x * GRID_SIZE, y * GRID_SIZE);
-          PVector end = new PVector(x * GRID_SIZE, (y - 1) * GRID_SIZE);
-          Wall topWall = new Wall(start, end);
-          walls.add(topWall);
-          current.walls.add(topWall);
-        }
-
-        // Add left wall if not on the leftmost edge
-        if (x > 0) {
-          PVector start = new PVector(x * GRID_SIZE, y * GRID_SIZE);
-          PVector end = new PVector((x - 1) * GRID_SIZE, y * GRID_SIZE);
-          Wall leftWall = new Wall(start, end);
-          walls.add(leftWall);
-          current.walls.add(leftWall);
+  void printCellWalls() {
+    // Print all walls in each cell
+    System.out.println("Print Cell Walls: ");
+    for (int x = 0; x < grid.size(); x++) {
+      for (int y = 0; y < grid.get(x).size(); y++) {
+        Cell cell = grid.get(x).get(y);
+        System.out.println("Cell (" + cell.x + ", " + cell.y + ") walls:");
+        for (Wall wall : cell.walls) {
+          System.out.println("  Wall from " + wall.start + " to " + wall.end);
         }
       }
     }
@@ -169,14 +195,6 @@ class Map
     for (Wall w : walls)
     {
       w.draw();
-    }
-
-    if (DEBUG) {
-      for (ArrayList<Cell> row : grid) {
-        for (Cell cell : row) {
-          cell.draw();
-        }
-      }
     }
   }
 }
