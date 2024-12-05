@@ -77,6 +77,7 @@ class Map
   {
     walls = new ArrayList<Wall>();
     frontier = new ArrayList<Wall>();
+    grid = new ArrayList<ArrayList<Cell>>();
   }
 
 
@@ -84,6 +85,7 @@ class Map
   void generate(int which)
   {
     walls.clear();
+    grid.clear();
 
     System.out.println("Generate");
 
@@ -96,7 +98,7 @@ class Map
     System.out.println("Cols: " + cols);
     System.out.println("Rows: " + rows);
 
-    grid = new ArrayList<ArrayList<Cell>>();
+    //grid = new ArrayList<ArrayList<Cell>>();
 
     for (int x = 0; x < rows; x++) {
       ArrayList<Cell> row = new ArrayList<Cell>();
@@ -195,10 +197,7 @@ class Map
     startCell.setVisit();
     //System.out.println(startCell.visited);
     for (Wall w : startCell.walls) {
-      if ((w.start.y == 0 && w.end.y == 0 && startCell.x == 0) ||
-        (w.start.x == 0 && w.end.x == 0 && startCell.y == 0) ||
-        (w.start.y == rows*GRID_SIZE && w.end.y == rows*GRID_SIZE && startCell.x == rows - 1) ||
-        (w.start.x == cols*GRID_SIZE && w.end.x == cols*GRID_SIZE && startCell.y == cols - 1)
+      if (isBorderWall(w, startCell, rows, cols)
         ) {
         continue;
       }
@@ -211,38 +210,66 @@ class Map
     }
 
     // in while loop
-    // Pick random wall from frontier
-    Wall wall = frontier.get(int(random(frontier.size())));
-    System.out.println("Random Wall from frontier " + wall.start + " " + wall.end);
+    while (!frontier.isEmpty()) {
+      // Pick random wall from frontier
+      Wall wall = frontier.get(int(random(frontier.size())));
+      System.out.println("Random Wall from frontier " + wall.start + " " + wall.end);
 
-    // Get neighbor cell that share the same wall
-    Cell neighbor = findNeighbor(wall);
+      // Get neighbor cell that share the same wall
+      Cell neighbor = findNeighbor(wall);
 
-    System.out.println(neighbor.x + " " + neighbor.y);
+      System.out.println(neighbor.x + " " + neighbor.y);
 
-    // If the neighbor cell that have the wall has not been visited - getVisit()
-    if (!neighbor.getVisit()) {
-      // remove wall from the map
-      // remove wall from frontier
-      // neighbor - setVisit()
-      // add neighbor cell's walls that isn't in frontier
-    } else {
-      frontier.remove(wall);
+      // If the neighbor cell that have the wall has not been visited - getVisit()
+      if (!neighbor.getVisit()) {
+        // remove wall from the map
+        walls.remove(wall);
+        // remove wall from frontier
+        frontier.remove(wall);
+        // neighbor - setVisit()
+        neighbor.setVisit();
+        // add neighbor cell's walls that isn't in frontier
+        for (Wall neighborWall : neighbor.walls) {
+          if (!isBorderWall(neighborWall, neighbor, rows, cols) && !frontier.contains(neighborWall)) {
+            frontier.add(neighborWall);
+          }
+        }
+      } else {
+        frontier.remove(wall);
+      }
     }
+    //// Pick random wall from frontier
+    //Wall wall = frontier.get(int(random(frontier.size())));
+    //System.out.println("Random Wall from frontier " + wall.start + " " + wall.end);
 
-
-
-
-    //while (!frontier.isEmpty()) {
-    //  // Pick random wall from frontier
-    //  Wall wall = frontier.get(int(random(frontier.size())));
-    //  System.out.println(wall.start + "" + wall.end);
-
-    //  // Get neighbor cell that share the same wall
+    //// Get neighbor cell that share the same wall
     //Cell neighbor = findNeighbor(wall);
 
+    //System.out.println(neighbor.x + " " + neighbor.y);
 
+    //// If the neighbor cell that have the wall has not been visited - getVisit()
+    //if (!neighbor.getVisit()) {
+    //  // remove wall from the map
+    //  walls.remove(wall);
+    //  // remove wall from frontier
+    //  frontier.remove(wall);
+    //  // neighbor - setVisit()
+    //  neighbor.setVisit();
+    //  // add neighbor cell's walls that isn't in frontier
+    //  for (Wall neighborWall: neighbor.walls) {
+    //    if (!isBorderWall(neighborWall, neighbor, rows, cols) && !frontier.contains(neighborWall)) {
+    //      frontier.add(neighborWall);
+    //    }
+    //  }
+    //} else {
+    //  frontier.remove(wall);
     //}
+
+
+
+
+
+    printGrid();
   }
 
   void printCellNeighbor() {
@@ -307,6 +334,13 @@ class Map
     }
 
     return null;
+  }
+
+  boolean isBorderWall(Wall wall, Cell cell, int rows, int cols) {
+    return (wall.start.y == 0 && wall.end.y == 0 && cell.x == 0) ||
+      (wall.start.x == 0 && wall.end.x == 0 && cell.y == 0) ||
+      (wall.start.y == rows*GRID_SIZE && wall.end.y == rows*GRID_SIZE && cell.x == rows - 1) ||
+      (wall.start.x == cols*GRID_SIZE && wall.end.x == cols*GRID_SIZE && cell.y == cols - 1);
   }
 
 
