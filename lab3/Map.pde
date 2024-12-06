@@ -32,6 +32,19 @@ class Wall
       circle(marker.x, marker.y, 5);
     }
   }
+
+  @Override
+    public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null || getClass() != obj.getClass()) return false;
+    Wall other = (Wall) obj;
+    return (start.equals(other.start) && end.equals(other.end));
+  }
+
+  @Override
+    public int hashCode() {
+    return start.hashCode() + end.hashCode();
+  }
 }
 
 class Cell {
@@ -71,12 +84,14 @@ class Map
   ArrayList<ArrayList<Cell>> grid;
   ArrayList<Wall> walls;
   ArrayList<Wall> frontier;
+  HashMap<Wall, ArrayList<Cell>> wallCell;
 
   Map()
   {
+    grid = new ArrayList<ArrayList<Cell>>();
     walls = new ArrayList<Wall>();
     frontier = new ArrayList<Wall>();
-    grid = new ArrayList<ArrayList<Cell>>();
+    wallCell = new HashMap<Wall, ArrayList<Cell>>();
   }
 
   void generate(int which)
@@ -146,6 +161,11 @@ class Map
         current.walls.add(topWall);
         walls.add(topWall);
 
+        if (!isBorderWall(topWall, current, rows, cols)) {
+          wallCell.putIfAbsent(topWall, new ArrayList<Cell>());
+          wallCell.get(topWall).add(current);
+        }
+
         // Bottom Wall
         PVector bottomStart = new PVector(y*GRID_SIZE, (x+1)*GRID_SIZE);
         PVector bottomEnd = new PVector((y+1)*GRID_SIZE, (x+1)*GRID_SIZE);
@@ -155,12 +175,22 @@ class Map
           walls.add(bottomWall);
         }
 
+        if (!isBorderWall(bottomWall, current, rows, cols)) {
+          wallCell.putIfAbsent(bottomWall, new ArrayList<Cell>());
+          wallCell.get(bottomWall).add(current);
+        }
+
         // Left Wall
         PVector leftStart = new PVector(y*GRID_SIZE, x*GRID_SIZE);
         PVector leftEnd = new PVector(y*GRID_SIZE, (x+1)*GRID_SIZE);
         Wall leftWall = new Wall(leftStart, leftEnd);
         current.walls.add(leftWall);
         walls.add(leftWall);
+
+        if (!isBorderWall(leftWall, current, rows, cols)) {
+          wallCell.putIfAbsent(leftWall, new ArrayList<Cell>());
+          wallCell.get(leftWall).add(current);
+        }
 
         // Right Wall
         PVector rightStart = new PVector((y+1)*GRID_SIZE, x*GRID_SIZE);
@@ -169,6 +199,11 @@ class Map
         current.walls.add(rightWall);
         if (y == cols-1) {
           walls.add(rightWall);
+        }
+
+        if (!isBorderWall(rightWall, current, rows, cols)) {
+          wallCell.putIfAbsent(rightWall, new ArrayList<Cell>());
+          wallCell.get(rightWall).add(current);
         }
       }
     }
@@ -182,7 +217,7 @@ class Map
 
     // Mark starting cell as visited
     startCell.setVisit();
-    
+
     // Add walls around it to the frontier
     for (Wall w : startCell.walls) {
       if (!isBorderWall(w, startCell, rows, cols)
@@ -305,21 +340,15 @@ class Map
   }
 
   Cell findNeighbor(Wall wall) {
-    for (int x = 0; x < grid.size(); x++) {
-      for (int y = 0; y < grid.get(x).size(); y++) {
-        Cell cell = grid.get(x).get(y);
-        if (cell.getVisit()) {
-          continue;
-        }
-        System.out.println("Neighbors: ");
-        for (Wall w : cell.walls) {
-          System.out.println("Wall from " + w.start + " to " + w.end);
-          if ((w.start.equals(wall.start)) && (w.end.equals(wall.end)) ||
-            (w.start.equals(wall.end) && w.end.equals(wall.start))) {
-            System.out.println("Yes");
-            return cell;
-          }
-        }
+    ArrayList<Cell> cells = wallCell.get(wall);
+
+    if (cells == null) {
+      return null;
+    }
+
+    for (Cell cell : cells) {
+      if (!cell.getVisit()) {
+        return cell;
       }
     }
 
