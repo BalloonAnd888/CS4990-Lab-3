@@ -6,4 +6,4 @@ boolean DEBUG = true;
 boolean SHOW_WALL_DIRECTION = true;
 
 
-int GRID_SIZE = 400;
+int GRID_SIZE = 200;
